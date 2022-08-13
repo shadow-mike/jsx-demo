@@ -4,16 +4,24 @@ function createElement(type, attributes, ...children) {
     for (let name in attributes) {
         ele.setAttribute(name, attributes[name])
     }
-    for (let child of children) {
-        if (typeof child === 'string') {
-            child = document.createTextNode(child);
+
+    const renderChildren = (children) => {
+        for (let child of children) {
+            if (typeof child === 'string') {
+                child = document.createTextNode(child);
+            }
+            if (Array.isArray(child)) {
+                renderChildren(child);
+                continue;
+            }
+            if (child.mount) {
+                child.mount(ele);
+            } else {
+                ele.appendChild(child); // child不是Node类的话会报错
+            }
         }
-        if (child.mount) {
-            child.mount(ele);
-        } else {
-            ele.appendChild(child); // child不是Node类的话会报错
-        }
-    }
+    };
+    renderChildren(children);
     return ele;
 }
 
@@ -23,10 +31,12 @@ class MyComponent {
         this.root = document.createElement('div');
         this.renderQuest = false;
         this.children = [];
+        this.attributes = {};
         this.requestRender();
     }
     setAttribute(name, val) {
-        this.root.setAttribute(name, val);
+        // this.root.setAttribute(name, val);
+        this.attributes[name] = val;
         this.requestRender();
     };
     appendChild(child) {
@@ -43,16 +53,20 @@ class MyComponent {
         // start a async render task
         Promise.resolve().then(() => {
             this.renderQuest = false;
-            this.render();
+            this.root.innerHTML = '';
+            this.root.appendChild(this.render());
         })
     }
     render() {
         console.log('rendering');
-        this.root.innerHTML = '';
-        this.root.appendChild(document.createTextNode(this.root.getAttribute('text')));
-        for (let child of this.children) {
-            this.root.appendChild(child);
-        }
+        // this.root.appendChild(document.createTextNode(this.root.getAttribute('text')));
+        // for (let child of this.children) {
+        //     this.root.appendChild(child);
+        // }
+        return <div>
+            {this.attributes.text}
+            {this.children}
+        </div>
     }
 }
 let jsx = <div id='container'>
