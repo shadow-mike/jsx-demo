@@ -7,7 +7,10 @@ export function createElement(type, attributes, ...children) {
 
     const renderChildren = (children) => {
         for (let child of children) {
-            if (typeof child === 'string') {
+            if (typeof child === 'undefined' || child === null) {
+                continue;
+            }
+            if (typeof child === 'string' || typeof child === 'number') {
                 child = document.createTextNode(child);
             }
             if (Array.isArray(child)) {
@@ -40,6 +43,11 @@ export class Component {
         this.requestRender();
     }
     setAttribute(name, val) {
+        let matched;
+        if (matched = name.match(/^on([\s\S]+)/)) {
+            const eventType = matched[1].replace(/[A-Z]/g, c => c.toLowerCase());
+            this.root.addEventListener(eventType, val);
+        }
         // this.root.setAttribute(name, val);
         this.attributes[name] = val;
         this.requestRender();
